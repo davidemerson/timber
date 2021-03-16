@@ -12,3 +12,16 @@ A timer for Amberfit, a distributed high intensity interval training
 - Timing devices account for skew.
 - Timing devices use a seven-segment large display.
 - Timing devices have wifi.
+- Timing devices are essentially displays for the internet-sourced time (they don't have an internal clock reference, so the display might skip around, but it should be synchronous).
+- Timing devices each have a hash identity which gets entered to the server side to allow them membership.
+- Any timing device can pause or re-start the cycle.
+- Any timing device can initiate the cycle or reset the cycle.
+
+## server
+- golang
+- measures latency to clients individually (by hash identity)
+
+## client
+- pi zero w?
+- button shim
+- seven segment display on i2c or something
