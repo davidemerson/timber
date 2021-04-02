@@ -30,6 +30,26 @@ def interval(seconds,t_i):
 			end = time.time() + remaining
 	buzzer()
 
+def check_status():
+	while True:
+	try:
+		status_url = Request(config['TIMBER']['status_url'], 
+              headers={'User-Agent': 'Mozilla/5.0'})
+		response = urlopen(status_url).read()
+		print(response)
+		time.sleep(.2)
+		if response == b'idle':
+			print("waiting to start...")
+			continue
+		if response == b'pause':
+			print("paused")
+			continue
+		if response == b'go':
+			break
+	except:
+		input("Didn't get a valid server response. Press any key.")
+		break
+
 def buzzer():
 	""" makes a noise """
 	print("BUZZER")
@@ -57,8 +77,6 @@ warmup_time = config['TIMBER']['warmup_time_sec']
 rest_time = config['TIMBER']['rest_time_sec']
 interval_time = config['TIMBER']['interval_time_sec']
 number_intervals = config['TIMBER']['number_intervals']
-status_url = Request('https://raw.githubusercontent.com/davidemerson/timber/main/timber.txt', 
-              headers={'User-Agent': 'Mozilla/5.0'})
 
 ## sync clocks
 sync()
@@ -68,26 +86,12 @@ print(warmup_time," seconds of warmup.")
 print(rest_time," seconds of rest between intervals.")
 print(interval_time," seconds of exercise each interval.")
 print(number_intervals," intervals.")
-print(status_url)
 input('Please press enter to continue:')
 interval_count = 0
 rest_count = 0
 
 ## work out!
-while True:
-	try:
-		response = urlopen(status_url).read()
-		print(response)
-		time.sleep(.1)
-		if response == b'idle':
-			print("waiting to start...")
-			continue
-		if response == b'go':
-			break
-	except:
-		input("Didn't get a valid server response. Press any key.")
-		break
-
+check_status()
 interval(warmup_time,0)
 while int(interval_count) < int(number_intervals):
 	interval(rest_time,2)
