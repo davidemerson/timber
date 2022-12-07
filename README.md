@@ -16,3 +16,7 @@ A timer for Amberfit, a distributed high intensity interval training
 - Timing devices each have a hash identity which gets entered to the server side to allow them membership.
 - Any timing device can pause or re-start the cycle.
 - Any timing device can initiate the cycle or reset the cycle.
+
+## other
+To synchronize this timer over the web, we can use a library like Gorilla WebSocket to create a WebSocket server that broadcasts the progress of the timer to all connected clients. This is in timber_sync.go.
+
