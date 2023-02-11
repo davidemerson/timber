@@ -21,7 +21,7 @@ func main() {
 			fmt.Println("Error reading from server:", err)
 			break
 		}
-		fmt.Print(message)
+		fmt.Print(username + " " + message)
 	}
 	fmt.Println("Connection closed.")
 }
