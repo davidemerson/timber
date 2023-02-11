@@ -77,6 +77,12 @@ func loadConfig(filename string) Config {
     return config
 }
 
+func readUsername(conn net.Conn) string {
+    username, _ := bufio.NewReader(conn).ReadString('\n')
+    username = strings.TrimSpace(username)
+    return username
+}
+
 func handleConnection(conn net.Conn, clients map[net.Conn]string, duration int, interval int) {
     username := readUsername(conn)
     clients[conn] = username
