@@ -1,54 +1,62 @@
 package main
 
 import (
+    "bufio"
     "fmt"
+    "net"
     "time"
 )
 
-// Workout represents a HIIT workout with intervals of work and rest.
-type Workout struct {
-    workInterval time.Duration
-    restInterval time.Duration
-    rounds       int
-}
-
-// Timer represents a timer for a HIIT workout.
-type Timer struct {
-    workout Workout
-    start   time.Time
-}
-
-// NewTimer creates a new Timer for a given Workout.
-func NewTimer(workout Workout) *Timer {
-    return &Timer{
-        workout: workout,
-        start:   time.Now(),
-    }
-}
-
-// Run starts the timer and prints the progress of the workout to the console.
-func (t *Timer) Run() {
-    for i := 1; i <= t.workout.rounds; i++ {
-        fmt.Printf("Starting round %d\n", i)
-
-        // Work interval.
-        time.Sleep(t.workout.workInterval)
-        fmt.Println("Work interval done, time for a rest!")
-
-        // Rest interval.
-        time.Sleep(t.workout.restInterval)
-        fmt.Println("Rest interval done, time to work again!")
-    }
-
-    fmt.Println("Workout complete!")
-}
-
 func main() {
-    workout := Workout{
-        workInterval: 30 * time.Second,
-        restInterval: 10 * time.Second,
-        rounds:       4,
+    // Define the length of each interval
+    workDuration := time.Second * 30
+    restDuration := time.Second * 10
+
+    // Define the number of intervals
+    numIntervals := 5
+
+    // Start a new server to listen for incoming connections
+    ln, err := net.Listen("tcp", ":8080")
+    if err != nil {
+        fmt.Println("Error starting server:", err)
+        return
     }
-    timer := NewTimer(workout)
-    timer.Run()
-}
+    defer ln.Close()
+
+    // Keep track of connected clients
+    clients := make(map[net.Conn]bool)
+
+    // Start a goroutine to accept incoming connections
+    go func() {
+        for {
+            conn, err := ln.Accept()
+            if err != nil {
+                fmt.Println("Error accepting connection:", err)
+                continue
+            }
+            clients[conn] = true
+            fmt.Println("Accepted new connection from", conn.RemoteAddr())
+        }
+    }()
+
+    // Start the timer
+    for i := 0; i < numIntervals; i++ {
+        // Broadcast the start of the work interval to all connected clients
+        for conn := range clients {
+            _, err := fmt.Fprintln(conn, "Starting work interval")
+            if err != nil {
+                fmt.Println("Error sending message:", err)
+                conn.Close()
+                delete(clients, conn)
+            }
+        }
+
+        time.Sleep(workDuration)
+
+        // Broadcast the start of the rest interval to all connected clients
+        for conn := range clients {
+            _, err := fmt.Fprintln(conn, "Starting rest interval")
+            if err != nil {
+                fmt.Println("Error sending message:", err)
+                conn.Close()
+                delete
