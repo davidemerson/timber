@@ -17,22 +17,29 @@ type Config struct {
 }
 
 func main() {
-    config := loadConfig("config.txt")
-    listener, err := net.Listen("tcp", ":"+strconv.Itoa(config.port))
+    // Load configuration
+    config, err := loadConfig("config.txt")
     if err != nil {
-        fmt.Println("Error starting server:", err)
-        return
+        log.Fatal(err)
     }
-    defer listener.Close()
-    fmt.Println("Server is listening on port", config.port)
+    
+    // Start the server
+    ln, err := net.Listen("tcp", config.ListenAddress)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer ln.Close()
+    
+    fmt.Println("Server started, listening on", config.ListenAddress)
+    
     clients := make(map[net.Conn]string)
     for {
-        conn, err := listener.Accept()
+        conn, err := ln.Accept()
         if err != nil {
             fmt.Println("Error accepting connection:", err)
             continue
         }
-        go handleConnection(conn, clients, config.duration, config.interval)
+        go handleConnection(conn, clients, config.Duration, config.Interval)
     }
 }
 
