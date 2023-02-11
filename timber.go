@@ -4,59 +4,61 @@ import (
     "bufio"
     "fmt"
     "net"
+    "strings"
     "time"
 )
 
+const (
+    workInterval = 20 * time.Second
+    restInterval = 10 * time.Second
+)
+
 func main() {
-    // Define the length of each interval
-    workDuration := time.Second * 30
-    restDuration := time.Second * 10
-
-    // Define the number of intervals
-    numIntervals := 5
-
-    // Start a new server to listen for incoming connections
-    ln, err := net.Listen("tcp", ":8080")
+    listener, err := net.Listen("tcp", ":8080")
     if err != nil {
         fmt.Println("Error starting server:", err)
         return
     }
-    defer ln.Close()
+    defer listener.Close()
+    fmt.Println("Server started on port 8080")
 
-    // Keep track of connected clients
-    clients := make(map[net.Conn]bool)
-
-    // Start a goroutine to accept incoming connections
-    go func() {
-        for {
-            conn, err := ln.Accept()
-            if err != nil {
-                fmt.Println("Error accepting connection:", err)
-                continue
-            }
-            clients[conn] = true
-            fmt.Println("Accepted new connection from", conn.RemoteAddr())
+    for {
+        conn, err := listener.Accept()
+        if err != nil {
+            fmt.Println("Error accepting connection:", err)
+            continue
         }
-    }()
+        go handleConnection(conn)
+    }
+}
 
-    // Start the timer
-    for i := 0; i < numIntervals; i++ {
-        // Broadcast the start of the work interval to all connected clients
-        for conn := range clients {
-            _, err := fmt.Fprintln(conn, "Starting work interval")
-            if err != nil {
-                fmt.Println("Error sending message:", err)
-                conn.Close()
-                delete(clients, conn)
-            }
-        }
+func handleConnection(conn net.Conn) {
+    defer conn.Close()
+    username := readUsername(conn)
+    fmt.Println("Accepted connection from", username)
+    startTimer(conn, username)
+}
 
-        time.Sleep(workDuration)
+func readUsername(conn net.Conn) string {
+    reader := bufio.NewReader(conn)
+    fmt.Fprint(conn, "Enter your username: ")
+    username, _ := reader.ReadString('\n')
+    username = strings.TrimSpace(username)
+    return username
+}
 
-        // Broadcast the start of the rest interval to all connected clients
-        for conn := range clients {
-            _, err := fmt.Fprintln(conn, "Starting rest interval")
-            if err != nil {
-                fmt.Println("Error sending message:", err)
-                conn.Close()
-                delete
+func startTimer(conn net.Conn, username string) {
+    startTime := time.Now().Add(5 * time.Second)
+    timer := time.NewTimer(startTime.Sub(time.Now()))
+    for i := 0; i < 5; i++ {
+        <-timer.C
+        fmt.Fprintln(conn, username, "Work interval started...")
+        time.Sleep(workInterval)
+        fmt.Fprintln(conn, username, "Work interval ended.")
+        fmt.Fprintln(conn, username, "Rest interval started...")
+        time.Sleep(restInterval)
+        fmt.Fprintln(conn, username, "Rest interval ended.")
+        timer.Reset(workInterval + restInterval)
+    }
+    fmt.Fprintln(conn, username, "Timer ended.")
+}
