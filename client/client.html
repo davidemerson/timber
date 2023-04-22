@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>HIIT Timer</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $(function() {
+      const url = "ws://" + window.location.host + "/ws";
+      const socket = new WebSocket(url);
+
+      // Send a message to the server when the user clicks the "Start" button.
+      $("#start-btn").click(function() {
+        socket.send(JSON.stringify({ action: "start" }));
+      });
+
+      // Send a message to the server when the user clicks the "Stop" button.
+      $("#stop-btn").click(function() {
+        socket.send(JSON.stringify({ action: "stop" }));
+      });
+
+      // Receive messages from the server and update the UI accordingly.
+      socket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        if (data.action === "update") {
+          $("#interval").text(data.currentInterval);
+          $("#time-left").text(data.timeLeft);
+        }
+      };
+    });
+  </script>
+</head>
+<body>
+  <h1>HIIT Timer</h1>
+  <p>Interval: <span id="interval"></span></p>
+  <p>Time left: <span id="time-left"></span></p>
+  <button id="start-btn">Start</button>
+  <button id="stop-btn">Stop</button>
+</body>
+</html>
