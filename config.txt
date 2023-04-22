@@ -1,3 +1,0 @@
-ListenAddress=localhost:8080
-Duration=30
-Interval=5
